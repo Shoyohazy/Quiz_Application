@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./App.css";
 import Welcome from "./components/Welcome";
 import QuestionCard from "./components/QuestionCard";
+import { questions } from "./constants/Questions";
 
 function App() {
   const [start, setStart] = useState(false);
@@ -14,8 +15,11 @@ function App() {
   };
   return (
     <div className="flex justify-center items-center">
-      {!start && <Welcome onStart={handleStart} />}
-      {start && <QuestionCard onFinish={onFinish} />}
+      {!start ? (
+        <Welcome onStart={handleStart} />
+      ) : (
+        <QuestionCard questions={questions} onFinish={onFinish} />
+      )}
     </div>
   );
 }

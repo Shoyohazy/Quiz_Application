@@ -1,64 +1,83 @@
 import { useEffect, useState } from "react";
-import { questions } from "../constants/Questions";
+
 import ScoreCard from "./ScoreCard";
 
-function QuestionCard({ onFinish }) {
+function QuestionCard({ questions, onFinish }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
-  const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
-    // Load the score from localStorage on component mount
+    const savedQuestionIndex = localStorage.getItem("quizQuestionIndex");
     const savedScore = localStorage.getItem("quizScore");
-    if (savedScore) {
+    console.log("savedQuestionIndex:", savedQuestionIndex);
+    console.log("savedScore:", savedScore);
+
+    if (savedQuestionIndex !== null && savedScore !== null) {
+      setCurrentQuestionIndex(parseInt(savedQuestionIndex, 10));
       setScore(parseInt(savedScore, 10));
     }
   }, []);
 
-  const handleOptions = (option) => {
-    setSelectedOption(option);
-    console.log(option);
-  };
+  useEffect(() => {
+    // Save quiz progress to localStorage on state change
+    console.log("useEffect: Component mounted");
+    localStorage.setItem("quizQuestionIndex", currentQuestionIndex.toString());
+    localStorage.setItem("quizScore", score.toString());
+  }, [currentQuestionIndex, score]);
 
-  const handleAnswer = () => {
-    const correctOption = Object.keys(currentQuestion).find((key) => {
-      if (
-        key !== "question" &&
-        key !== "answer" &&
-        key == currentQuestion.answer
-      ) {
-        return currentQuestion[key];
-      }
-    });
-    console.log(correctOption);
-    if (selectedOption == currentQuestion[correctOption]) {
-      console.log("update score in local Storage");
-      setScore((prevScore) => prevScore + 1);
-      localStorage.setItem("quizScore", score.toString());
-    }
-    setSelectedOption(null);
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const handleOptionClick = (option) => {
+    setSelectedOption(option);
   };
 
   const handleNextQuestion = () => {
-    setCurrentQuestionIndex((prevIndex) => {
-      return prevIndex + 1;
-    });
+    // Find the correct option
+    const selectedOptionKey = Object.keys(currentQuestion).find(
+      (key) =>
+        key !== "question" &&
+        key !== "answer" &&
+        currentQuestion[key] === selectedOption
+    );
+    console.log(selectedOptionKey);
+
+    // Handle user's response and move to the next question
+    if (selectedOptionKey == currentQuestion.answer) {
+      // Increment the score
+      setScore((prevScore) => prevScore + 1);
+    }
+
+    // Reset selected option
+    setSelectedOption(null);
+
+    // Move to the next question or finish the quiz
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+    } else {
+      // Clear quiz progress from localStorage on quiz completion
+      localStorage.removeItem("quizQuestionIndex");
+      localStorage.removeItem("quizScore");
+    }
   };
 
-  const resetQuiz = () => {
+  const restartQuiz = () => {
+    // Reset the quiz state
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
     setScore(0);
+    // Clear quiz progress from localStorage on restart
+    localStorage.removeItem("quizQuestionIndex");
     localStorage.removeItem("quizScore");
     onFinish();
   };
+
   return (
     <div>
-      {currentQuestionIndex < questions.length ? (
-        <div className={`flex items-center justify-center h-screen `}>
-          <div className="bg-white shadow-md rounded-md p-4 max-w-lg">
-            <h2 className="text-3xl font-semibold mb-4">
+      {currentQuestionIndex < questions.length - 1 ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="bg-white shadow-md rounded-md p-8 max-w-md">
+            <h2 className="text-2xl font-semibold mb-4">
               {currentQuestion.question}
             </h2>
             <ul className="list-none p-0">
@@ -67,13 +86,14 @@ function QuestionCard({ onFinish }) {
                 if (key !== "question" && key !== "answer") {
                   const option = currentQuestion[key];
                   const isOptionSelected = selectedOption === option;
+
                   return (
                     <li
                       key={key}
-                      className={`mb-2 p-2 border rounded-md cursor-pointer  ${
+                      className={`mb-2 p-2 border rounded-md cursor-pointer ${
                         isOptionSelected ? "bg-blue-100" : "hover:bg-gray-100"
                       }`}
-                      onClick={() => handleOptions(option, key)}
+                      onClick={() => handleOptionClick(option)}
                     >
                       {option}
                     </li>
@@ -82,24 +102,21 @@ function QuestionCard({ onFinish }) {
                 return null;
               })}
             </ul>
-            <div className="flex max-w-md">
-              <button
-                onClick={handleAnswer}
-                className="bg-blue-500 ml-[15%] max-w-md  text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue mt-4"
-              >
-                Answer
-              </button>
-              <button
-                className="bg-blue-500 ml-[10%] max-w-md  text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue mt-4"
-                onClick={handleNextQuestion}
-              >
-                Next
-              </button>
-            </div>
+            <p className="mt-4">Score: {score}</p>
+            <button
+              className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue mt-4"
+              onClick={handleNextQuestion}
+            >
+              Next
+            </button>
           </div>
         </div>
       ) : (
-        <ScoreCard score={score} onRestart={resetQuiz} />
+        <ScoreCard
+          score={score}
+          totalQuestions={questions.length}
+          onRestart={restartQuiz}
+        />
       )}
     </div>
   );
