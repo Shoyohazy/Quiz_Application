@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import Welcome from "./components/Welcome";
 import QuestionCard from "./components/QuestionCard";
@@ -6,6 +6,15 @@ import { questions } from "./constants/Questions";
 
 function App() {
   const [start, setStart] = useState(false);
+
+  useEffect(() => {
+    const savedQuestionIndex = localStorage.getItem("quizQuestionIndex");
+    const savedScore = localStorage.getItem("quizScore");
+
+    if (savedQuestionIndex && savedScore) {
+      setStart(true);
+    }
+  }, []);
 
   const handleStart = () => {
     setStart(true);
