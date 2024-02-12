@@ -9,10 +9,13 @@ function App() {
   const handleStart = () => {
     setStart(true);
   };
+  const onFinish = () => {
+    setStart(true);
+  };
   return (
     <div className="flex justify-center items-center">
       {!start && <Welcome onStart={handleStart} />}
-      {start && <QuestionCard />}
+      {start && <QuestionCard onFinish={onFinish} />}
     </div>
   );
 }

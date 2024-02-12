@@ -17,14 +17,6 @@ export const questions = [
     answer: "A",
   },
   {
-    question: "A pita is a type of what?",
-    A: "fresh fruit",
-    B: "flat bread",
-    C: "French tart",
-    D: "friend bean dip",
-    answer: "B",
-  },
-  {
     question:
       "A portrait that comically exaggerates a person's physical traits is called a what?",
     A: "landscape",
